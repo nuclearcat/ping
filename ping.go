@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"time"
+	"math/rand"
 )
 
 const (
@@ -126,6 +127,7 @@ func Ping(address string, timeout int) bool {
 }
 
 func Pinger(address string, timeout int) error {
+	xseq := rand.Int() & 0xFFFF
 	c, err := net.Dial("ip4:icmp", address)
 	if err != nil {
 		return err
@@ -134,7 +136,7 @@ func Pinger(address string, timeout int) error {
 	defer c.Close()
 
 	typ := icmpv4EchoRequest
-	xid, xseq := os.Getpid()&0xffff, 1
+	xid := os.Getpid()&0xffff
 	wb, err := (&icmpMessage{
 		Type: typ, Code: 0,
 		Body: &icmpEcho{
@@ -158,11 +160,21 @@ func Pinger(address string, timeout int) error {
 		if m, err = parseICMPMessage(rb); err != nil {
 			return err
 		}
+		// We need to check xid,seq in reply, and 
+		// don't break on other icmp, it might be ICMP unreach
 		switch m.Type {
-		case icmpv4EchoRequest, icmpv6EchoRequest:
+		    case icmpv4EchoRequest, icmpv6EchoRequest:
 			continue
 		}
-		break
+		if (m.Type == icmpv4EchoReply || m.Type == icmpv6EchoReply) {
+		    echoreply, err := parseICMPEcho(rb[4:])
+		    if (err == nil) {
+			if (echoreply.ID == xid && echoreply.Seq == xseq) {
+			    break
+			}
+		    }
+		    break
+		}
 	}
 	return nil
 }
