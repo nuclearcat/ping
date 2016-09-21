@@ -132,7 +132,7 @@ func Pinger(address string, timeout int) error {
 	if err != nil {
 		return err
 	}
-	c.SetDeadline(time.Now().Add(time.Duration(timeout) * time.Second))
+	c.SetDeadline(time.Now().Add(time.Duration(timeout) * time.Millisecond))
 	defer c.Close()
 
 	typ := icmpv4EchoRequest
