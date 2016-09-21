@@ -127,6 +127,7 @@ func Ping(address string, timeout int) bool {
 }
 
 func Pinger(address string, timeout int) error {
+	rand.Seed(time.Now().UnixNano())
 	xseq := rand.Int() & 0xFFFF
 	c, err := net.Dial("ip4:icmp", address)
 	if err != nil {
