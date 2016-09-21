@@ -174,7 +174,6 @@ func Pinger(address string, timeout int) error {
 			    break
 			}
 		    }
-		    break
 		}
 	}
 	return nil
